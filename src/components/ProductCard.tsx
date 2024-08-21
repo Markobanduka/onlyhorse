@@ -5,9 +5,9 @@ import { centsToDollars, cn } from "@/lib/utils";
 import ZoomedImage from "./ZoomedImage";
 import { Button, buttonVariants } from "./ui/button";
 import Link from "next/link";
-// import { useMutation, useQueryClient } from "@tanstack/react-query";
-// import { toggleProductArchiveAction } from "@/app/secret-dashboard/actions";
-// import { useToast } from "./ui/use-toast";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toggleProductArchiveAction } from "@/app/secret-dashboard/actions";
+import { useToast } from "./ui/use-toast";
 
 const ProductCard = ({
   product,
@@ -16,6 +16,30 @@ const ProductCard = ({
   product: any;
   adminView?: boolean;
 }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { mutate: toggleArchive, isPending } = useMutation({
+    mutationKey: ["toggleArchive"],
+    mutationFn: async () => await toggleProductArchiveAction(product.id),
+    onSuccess: () => {
+      toast({
+        title: "Product Archived",
+        description: product.isArchived
+          ? "The product has been unarchived successfully"
+          : "The product has been archived successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["getAllProducts"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <Card className="flex flex-col">
       <CardHeader className="px-2 flex flex-row items-center justify-between space-y-0 pb-2">
@@ -32,8 +56,8 @@ const ProductCard = ({
             <Button
               className="w-full"
               variant={"outline"}
-              // onClick={() => toggleArchive()}
-              // disabled={isPending}
+              onClick={() => toggleArchive()}
+              disabled={isPending}
             >
               {product.isArchived ? "Unarchive" : "Archive"}
             </Button>

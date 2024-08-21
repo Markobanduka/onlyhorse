@@ -12,13 +12,13 @@ import {
 } from "@/components/ui/select";
 // import { useToast } from "@/components/ui/use-toast";
 import { centsToDollars } from "@/lib/utils";
-// import { Product } from "@prisma/client";
 // import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 // import { createCheckoutSessionAction } from "./actions";
 import { useRouter } from "next/navigation";
+import { Product } from "@prisma/client";
 
-const ProductCheckout = ({ product }: { product: any }) => {
+const ProductCheckout = ({ product }: { product: Product }) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   // const { toast } = useToast();
   const router = useRouter();
