@@ -1,7 +1,6 @@
 "use client";
 
 import { CldVideoPlayer } from "next-cloudinary";
-import "next-cloudinary/dist/cld-video-player.css";
 
 const TodaysHighlight = () => {
   return (
@@ -10,10 +9,9 @@ const TodaysHighlight = () => {
         width="960"
         height="540"
         className="rounded-md"
-        src="highlighted-vid_eaa74w"
+        src="highlighted-vid_ovdihz"
       />
     </div>
   );
 };
-
 export default TodaysHighlight;

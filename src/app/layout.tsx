@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import "next-cloudinary/dist/cld-video-player.css";
 import "./globals.css";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import Footer from "@/components/Footer";
+import TanStackProvider from "@/providers/TanStackProvider";
+import { Toaster } from "@/components/ui/toaster";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,10 +29,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <div className="h-screen flex flex-col">
-            <div className="flex-1">{children}</div>
+            <div className="flex-1">
+              <TanStackProvider>{children}</TanStackProvider>
+            </div>
             <Footer />
           </div>
         </ThemeProvider>
+        <Toaster />
       </body>
     </html>
   );
