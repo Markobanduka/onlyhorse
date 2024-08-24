@@ -1,25 +1,135 @@
 "use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { buttonVariants } from "@/components/ui/button";
-import { user } from "@/dummy_data";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Heart, ImageIcon, LockKeyholeIcon, Trash } from "lucide-react";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
+import { Post as PostType, Prisma, User } from "@prisma/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Heart,
+  ImageIcon,
+  LockKeyholeIcon,
+  MessageCircle,
+  Trash,
+} from "lucide-react";
 import { CldVideoPlayer } from "next-cloudinary";
 import Image from "next/image";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import {
+  commentOnPostAction,
+  deletePostAction,
+  likePostAction,
+} from "./actions";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import Comment from "./Comment";
+
+type PostWithComment = Prisma.PostGetPayload<{
+  include: {
+    comments: {
+      include: {
+        user: true;
+      };
+    };
+    likesList: true;
+  };
+}>;
 
 const Post = ({
   post,
   isSubscribed,
   admin,
 }: {
-  post: any;
+  post: PostWithComment;
   isSubscribed: boolean;
-  admin: any;
+  admin: User;
 }) => {
   const [isLiked, setIsLiked] = useState(false);
   const [comment, setComment] = useState("");
+
+  const { user } = useKindeBrowserClient();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const { mutate: deletePost } = useMutation({
+    mutationKey: ["deletePost"],
+    mutationFn: async (postId) => await deletePostAction(post.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      toast({
+        title: "Post Deleted",
+        description: "Your post has been successfully deleted.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error Deleting Post",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { mutate: likePost } = useMutation({
+    mutationKey: ["likePost"],
+    mutationFn: async () => {
+      post.likes += isLiked ? -1 : 1;
+      setIsLiked(!isLiked);
+      await likePostAction(post.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const { mutate: commentPost, isPending: isCommenting } = useMutation({
+    mutationKey: ["commentPost"],
+    mutationFn: async () => await commentOnPostAction(post.id, comment),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+      setComment("");
+      toast({
+        title: "Success",
+        description: "Comment added successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCommentSubmission = async (
+    e: React.FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+    if (!comment) return;
+    commentPost();
+  };
+
+  useEffect(() => {
+    if (post.likesList && user?.id) setIsLiked(post.likesList.length > 0);
+  }, [post.likesList, user?.id]);
 
   return (
     <div className="flex flex-col gap-3 p-3 border-t">
@@ -38,7 +148,7 @@ const Post = ({
           {admin.id === user?.id && (
             <Trash
               className="w-5 h-5 text-muted-foreground hover:text-red-500 cursor-pointer"
-              // onClick={() => deletePost()}
+              onClick={() => deletePost()}
             />
           )}
         </div>
@@ -111,7 +221,8 @@ const Post = ({
               "fill-red-500": isLiked,
             })}
             onClick={() => {
-              setIsLiked(!isLiked);
+              if (!isSubscribed) return;
+              likePost();
             }}
           />
           <span className="text-xs text-zinc-400 tracking-tighter">
@@ -119,7 +230,7 @@ const Post = ({
           </span>
         </div>
 
-        {/* <div className="flex gap-1 items-center">
+        <div className="flex gap-1 items-center">
           <Dialog>
             <DialogTrigger>
               <MessageCircle className="w-5 h-5 cursor-pointer" />
@@ -166,7 +277,7 @@ const Post = ({
               {post.comments.length > 0 ? post.comments.length : 0}
             </span>
           </div>
-        </div> */}
+        </div>
       </div>
     </div>
   );
