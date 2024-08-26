@@ -8,6 +8,7 @@ import { useState } from "react";
 
 const AuthButtons = () => {
   const [loading, setLoading] = useState(false);
+
   return (
     <div className="flex gap-3 flex-1 md:flex-row flex-col">
       <RegisterLink className="flex-1" onClick={() => setLoading(true)}>
@@ -23,5 +24,4 @@ const AuthButtons = () => {
     </div>
   );
 };
-
 export default AuthButtons;
