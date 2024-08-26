@@ -83,13 +83,7 @@ const Sidebar = async () => {
           <DropdownMenuContent>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <Link
-              href={
-                process.env.STRIPE_BILLING_PORTAL_LINK_DEV +
-                "?prefilled_email=" +
-                user?.email
-              }
-            >
+            <Link href={"#"}>
               <DropdownMenuItem>Billing</DropdownMenuItem>
             </Link>
             <LogoutButton />

@@ -161,7 +161,6 @@ export async function getDashboardData() {
     },
   });
 
-  // run all promises in parallel so that they don't block each other
   const [
     totalRevenueResult,
     totalSales,

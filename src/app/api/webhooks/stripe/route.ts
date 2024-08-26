@@ -6,6 +6,7 @@ import Stripe from "stripe";
 
 import { Resend } from "resend";
 import WelcomeEmail from "@/emails/WelcomeEmail";
+import ReceiptEmail from "@/emails/ReceiptEmail";
 // import ReceiptEmail from "@/emails/ReceiptEmail";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
 
   let event;
 
-  // Verify the event by using the secret
+  // verify the event by using the secret
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err: any) {
@@ -57,6 +58,7 @@ export async function POST(req: Request) {
 
           if (!user) throw new Error("User not found");
 
+          // delete the user's subscription.
           if (!user.customerId) {
             await prisma.user.update({
               where: { id: user.id },
@@ -99,6 +101,7 @@ export async function POST(req: Request) {
                 where: { id: user.id },
                 data: { isSubscribed: true },
               });
+
               if (process.env.NODE_ENV !== "production") {
                 await resend.emails.send({
                   from: "OnlyHorse <onboarding@resend.dev>",
@@ -113,6 +116,54 @@ export async function POST(req: Request) {
                 });
               }
             } else {
+              // one time payment, for our t-shirts
+              const { orderId, size } = session.metadata as {
+                orderId: string;
+                size: string;
+              };
+
+              const shippingDetails = session.shipping_details?.address;
+
+              const updatedOrder = await prisma.order.update({
+                where: { id: orderId },
+                data: {
+                  isPaid: true,
+                  size,
+                  shippingAddress: {
+                    create: {
+                      address: shippingDetails?.line1 ?? "",
+                      city: shippingDetails?.city ?? "",
+                      state: shippingDetails?.state ?? "",
+                      postalCode: shippingDetails?.postal_code ?? "",
+                      country: shippingDetails?.country ?? "",
+                    },
+                  },
+                },
+                select: {
+                  id: true,
+                  product: true,
+                  size: true,
+                  shippingAddress: true,
+                },
+              });
+              // send a success email to the user
+
+              if (process.env.NODE_ENV !== "production") {
+                await resend.emails.send({
+                  from: "OnlyHorse <onboarding@resend.dev>",
+                  to: [customerDetails.email],
+                  subject: "Order Confirmation",
+                  react: ReceiptEmail({
+                    orderDate: new Date(),
+                    orderNumber: updatedOrder.id,
+                    productImage: updatedOrder.product.image,
+                    productName: updatedOrder.product.name,
+                    productSize: updatedOrder.size,
+                    shippingAddress: updatedOrder.shippingAddress!,
+                    userName: user.name!,
+                  }),
+                });
+              }
             }
           }
         }
@@ -125,7 +176,6 @@ export async function POST(req: Request) {
         const user = await prisma.user.findUnique({
           where: { customerId: subscription.customer as string },
         });
-        console.log("Subscription: " + subscription);
         if (user) {
           await prisma.user.update({
             where: { id: user.id },

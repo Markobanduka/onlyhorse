@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 import { notFound, useSearchParams } from "next/navigation";
-import { centsToDollars } from "@/lib/utils";
 import { checkProductPaidStatus } from "./actions";
+import { centsToDollars } from "@/lib/utils";
 
 const sizeMap: { [key: string]: string } = {
   sm: "Small",
@@ -16,35 +16,34 @@ const sizeMap: { [key: string]: string } = {
 };
 
 const PurchaseSummary = () => {
-  // const searchParams = useSearchParams();
-  // const orderId = searchParams.get("orderId") || "";
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId") || "";
 
-  // const { data: order, isLoading } = useQuery({
-  //   queryKey: ["checkProductPaidStatus"],
-  //   queryFn: async () => await checkProductPaidStatus(orderId),
-  // });
+  const { data: order, isLoading } = useQuery({
+    queryKey: ["checkProductPaidStatus"],
+    queryFn: async () => await checkProductPaidStatus(orderId),
+  });
 
-  // if (isLoading) {
-  //   return (
-  //     <div className="min-h-screen flex flex-col items-center justify-center p-6">
-  //       <p className="text-center text-md mb-6">
-  //         Verifying your payment, please wait...
-  //       </p>
-  //       <span className="animate-spin h-10 w-10 border-t-2 border-b-2 border-sky-400 rounded-full" />
-  //     </div>
-  //   );
-  // }
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <p className="text-center text-md mb-6">
+          Verifying your payment, please wait...
+        </p>
+        <span className="animate-spin h-10 w-10 border-t-2 border-b-2 border-sky-400 rounded-full" />
+      </div>
+    );
+  }
 
-  // if (order === false) return notFound();
+  if (order === false) return notFound();
 
-  // if (!order) return null;
+  if (!order) return null;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
       <div className="flex flex-col items-center">
         <ZoomedImage
-          // imgSrc={order?.product.image}
-          imgSrc="/tshirts/1.png"
+          imgSrc={order?.product.image}
           className="h-96 w-96 rounded-md my-5"
         />
         <h1 className="text-2xl font-bold mb-4">
@@ -61,8 +60,7 @@ const PurchaseSummary = () => {
         <p className="text-muted-foreground">
           Order ID:{" "}
           <span className="font-bold text-foreground text-sky-400">
-            {/* {orderId} */}
-            12345667
+            {orderId}
           </span>
         </p>
 
@@ -73,29 +71,21 @@ const PurchaseSummary = () => {
 
           <CardContent>
             <div className="flex justify-between">
-              {/* <p>{order.product.name}</p> */}
-              <p>Only horse T-shirt</p>
-              {/* <p>${centsToDollars(order.product.price)}</p> */}
-              <p>$11,99</p>
+              <p>{order.product.name}</p>
+              <p>${centsToDollars(order.product.price)}</p>
             </div>
             <div className="flex justify-between">
-              {/* <p>Size: {sizeMap[order.size]}</p> */}
-              <p>Size: Small</p>
+              <p>Size: {sizeMap[order.size]}</p>
               <p>Quantity: 1</p>
             </div>
 
             <div className="mt-4">
               <h3 className="font-semibold">Shipping Address</h3>
-              {/* <p>Address: {order.shippingAddress?.address}</p> */}
-              <p>Address: Koste Nadja</p>
-              {/* <p>City: {order.shippingAddress?.city}</p> */}
-              <p>City: Belgrade</p>
-              {/* <p>State: {order.shippingAddress?.state}</p> */}
-              <p>State: FL</p>
-              {/* <p>Postal Code: {order.shippingAddress?.postalCode}</p> */}
-              <p>Postal Code: 11000</p>
-              {/* <p>Country: {order.shippingAddress?.country}</p> */}
-              <p>Country: Serbia</p>
+              <p>Address: {order.shippingAddress?.address}</p>
+              <p>City: {order.shippingAddress?.city}</p>
+              <p>State: {order.shippingAddress?.state}</p>
+              <p>Postal Code: {order.shippingAddress?.postalCode}</p>
+              <p>Country: {order.shippingAddress?.country}</p>
             </div>
           </CardContent>
         </Card>

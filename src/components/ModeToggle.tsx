@@ -15,14 +15,14 @@ export function ModeToggle() {
         size={"icon"}
         onClick={() => setTheme("light")}
       >
-        <SunIcon />
+        <SunIcon className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 text-muted-foreground" />
       </Button>
       <Button
         variant={"outline"}
         size={"icon"}
         onClick={() => setTheme("dark")}
       >
-        <MoonIcon />
+        <MoonIcon className="absolute h-[1.2rem] w-[1.2rem]  transition-all  dark:scale-100 text-muted-foreground" />
       </Button>
     </div>
   );
